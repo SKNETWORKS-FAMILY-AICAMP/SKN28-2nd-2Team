@@ -1,0 +1,40 @@
+﻿feature,importance
+avg_watch_time_per_day,0.34874624
+inactive_user_flag,0.07309736
+payment_method_Crypto,0.0672526
+last_login_days,0.06560624
+watch_hours,0.06279512
+payment_method_Gift Card,0.05728121
+monthly_fee,0.055216134
+number_of_profiles,0.05186676
+subscription_type_Basic,0.038214464
+profiles_per_fee,0.029238392
+payment_method_PayPal,0.021416383
+payment_method_Debit Card,0.018154642
+region_South America,0.00857978
+payment_method_Credit Card,0.008067306
+premium_user_flag,0.0076067187
+favorite_genre_Action,0.0068598287
+device_TV,0.0068445634
+high_watch_user_flag,0.006373286
+region_North America,0.005512057
+device_Desktop,0.0054046647
+subscription_type_Standard,0.0050982535
+age,0.005098229
+gender_Male,0.0050464664
+device_Laptop,0.004778715
+gender_Other,0.004618101
+region_Europe,0.004458265
+favorite_genre_Sci-Fi,0.003993418
+region_Oceania,0.0037345462
+favorite_genre_Comedy,0.003486531
+gender_Female,0.003451717
+device_Mobile,0.002958724
+device_Tablet,0.0024092672
+favorite_genre_Horror,0.0023893125
+favorite_genre_Documentary,0.0012236831
+region_Asia,0.0011549862
+region_Africa,0.0010418438
+favorite_genre_Romance,0.0009242537
+subscription_type_Premium,0.0
+favorite_genre_Drama,0.0
