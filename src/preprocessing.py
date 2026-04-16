@@ -1,5 +1,6 @@
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+import numpy as np
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 
 
 def preprocess(df):
@@ -8,24 +9,42 @@ def preprocess(df):
     # 불필요 컬럼 제거
     if "customer_id" in df.columns:
         df = df.drop(columns=["customer_id"])
+    if "monthly_fee" in df.columns:
+        df = df.drop(columns=["monthly_fee"])
 
     # 파생변수 생성
     df["inactive_user_flag"] = (df["last_login_days"] >= 30).astype(int)
-    df["high_watch_user_flag"] = (df["watch_hours"] >= df["watch_hours"].median()).astype(int)
-    df["premium_user_flag"] = (df["subscription_type"] == "Premium").astype(int)
-    df["profiles_per_fee"] = df["number_of_profiles"] / (df["monthly_fee"] + 1e-6)
+    df["estimated_days"] = np.where(
+        df["avg_watch_time_per_day"] > 0,
+        df["watch_hours"] / df["avg_watch_time_per_day"],
+        0
+    )
+    df["login_inactivity_ratio"] = np.where(
+        df["estimated_days"] > 0,
+        df["last_login_days"] / df["estimated_days"],
+        0
+    )
+    # clip 제거: 1.0 이상도 의미 있는 정보 (가입 기간보다 오래 안 들어온 것)
 
     # 타겟 분리
-    X = df.drop("churned", axis=1)
-    y = df["churned"]
+    y = None
+    if "churned" in df.columns:
+        y = df["churned"]
+        df = df.drop(columns=["churned"])
 
-    # one-hot encoding
-    X = pd.get_dummies(X, drop_first=False)
+    # 범주형 / 수치형 분리
+    cat_cols = ["gender", "subscription_type", "region", "device", "payment_method", "favorite_genre"]
+    num_cols = [c for c in df.columns if c not in cat_cols]
 
-    # 스케일링
+    # Label Encoding
+    label_encoders = {}
+    for col in cat_cols:
+        le = LabelEncoder()
+        df[col] = le.fit_transform(df[col].astype(str))
+        label_encoders[col] = le
+
+    # 스케일링 (수치형만)
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
+    df[num_cols] = scaler.fit_transform(df[num_cols])
 
-    X_scaled_df = pd.DataFrame(X_scaled, columns=X.columns)
-
-    return X_scaled_df, y, scaler, X.columns.tolist()
+    return df, y, scaler, label_encoders, df.columns.tolist()

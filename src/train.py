@@ -6,6 +6,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
+from catboost import CatBoostClassifier
 
 from sklearn.metrics import (
     accuracy_score,
@@ -47,38 +49,24 @@ def evaluate_model(name, model, x_test, y_test):
 def main():
     df = pd.read_csv(DATA_PATH)
 
-    X_scaled_df, y, scaler, feature_names = preprocess(df)
-
-    processed_df = X_scaled_df.copy()
-    processed_df["churned"] = y.values
-    processed_df.to_csv(PROCESSED_DIR / "processed_data.csv", index=False, encoding="utf-8-sig")
+    X, y, scaler, label_encoders, feature_names = preprocess(df)
 
     x_train, x_test, y_train, y_test = train_test_split(
-        X_scaled_df, y, test_size=0.2, random_state=42, stratify=y
+        X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    train_df = x_train.copy()
-    train_df["churned"] = y_train.values
-    train_df.to_csv(PROCESSED_DIR / "train_data.csv", index=False, encoding="utf-8-sig")
-
-    test_df = x_test.copy()
-    test_df["churned"] = y_test.values
-    test_df.to_csv(PROCESSED_DIR / "test_data.csv", index=False, encoding="utf-8-sig")
-
-    x_test.head(100).to_csv(PROCESSED_DIR / "x_test_sample.csv", index=False, encoding="utf-8-sig")
+    # 데이터 저장
+    x_train.to_csv(PROCESSED_DIR / "X_train_label.csv", index=False)
+    x_test.to_csv(PROCESSED_DIR / "X_test_label.csv", index=False)
+    y_train.to_csv(PROCESSED_DIR / "y_train.csv", index=False)
+    y_test.to_csv(PROCESSED_DIR / "y_test.csv", index=False)
 
     models = {
         "LogisticRegression": LogisticRegression(max_iter=1000, random_state=42),
         "RandomForest": RandomForestClassifier(n_estimators=200, random_state=42),
-        "XGBoost": XGBClassifier(
-            n_estimators=200,
-            max_depth=5,
-            learning_rate=0.05,
-            subsample=0.9,
-            colsample_bytree=0.9,
-            eval_metric="logloss",
-            random_state=42,
-        ),
+        "XGBoost": XGBClassifier(n_estimators=200, max_depth=5, learning_rate=0.05, eval_metric="logloss", random_state=42),
+        "LightGBM": LGBMClassifier(n_estimators=200, random_state=42, verbose=-1),
+        "CatBoost": CatBoostClassifier(iterations=200, random_state=42, verbose=0),
     }
 
     results = []
@@ -105,7 +93,7 @@ def main():
 
     joblib.dump(best_model, MODEL_DIR / "best_model.pkl")
     joblib.dump(scaler, MODEL_DIR / "scaler.pkl")
-    joblib.dump(feature_names, MODEL_DIR / "feature_names.pkl")
+    joblib.dump(label_encoders, MODEL_DIR / "label_encoders.pkl")
 
     if hasattr(best_model, "feature_importances_"):
         fi = pd.DataFrame({

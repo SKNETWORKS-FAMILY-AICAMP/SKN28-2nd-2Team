@@ -1,5 +1,7 @@
 import joblib
 import pandas as pd
+import numpy as np
+import shap
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -7,60 +9,93 @@ MODEL_DIR = BASE_DIR / "models"
 
 model = joblib.load(MODEL_DIR / "best_model.pkl")
 scaler = joblib.load(MODEL_DIR / "scaler.pkl")
-feature_names = joblib.load(MODEL_DIR / "feature_names.pkl")
+label_encoders = joblib.load(MODEL_DIR / "label_encoders.pkl")
+
+# 모델이 학습할 때 사용한 피처 순서
+FEATURE_ORDER = model.feature_names_
+CAT_COLS = ["gender", "subscription_type", "region", "device", "payment_method", "favorite_genre"]
+NUM_COLS = [c for c in FEATURE_ORDER if c not in CAT_COLS]
+
+# SHAP explainer (한 번만 생성)
+explainer = shap.Explainer(model)
 
 
+def make_features(data_dict):
+    df = pd.DataFrame([data_dict])
 
-def make_features(df):
-    df = df.copy()
+    # 불필요 컬럼 제거
+    for col in ["monthly_fee", "customer_id"]:
+        if col in df.columns:
+            df = df.drop(columns=[col])
 
-    if "customer_id" in df.columns:
-        df = df.drop(columns=["customer_id"])
-
+    # 파생변수
     df["inactive_user_flag"] = (df["last_login_days"] >= 30).astype(int)
-    df["high_watch_user_flag"] = (df["watch_hours"] >= df["watch_hours"].median()).astype(int)
-    df["premium_user_flag"] = (df["subscription_type"] == "Premium").astype(int)
-    df["profiles_per_fee"] = df["number_of_profiles"] / (df["monthly_fee"] + 1e-6)
+    df["estimated_days"] = np.where(
+        df["avg_watch_time_per_day"] > 0,
+        df["watch_hours"] / df["avg_watch_time_per_day"],
+        0
+    )
+    df["login_inactivity_ratio"] = np.where(
+        df["estimated_days"] > 0,
+        df["last_login_days"] / df["estimated_days"],
+        0
+    )
+    # clip 제거: 1.0 이상도 의미 있는 정보
 
-    df = pd.get_dummies(df)
+    # Label Encoding
+    for col in CAT_COLS:
+        if col in label_encoders:
+            le = label_encoders[col]
+            val = df[col].iloc[0]
+            if val in le.classes_:
+                df[col] = le.transform(df[col])
+            else:
+                df[col] = 0
 
-    for col in feature_names:
-        if col not in df.columns:
-            df[col] = 0
+    # 수치형 스케일링
+    df[NUM_COLS] = scaler.transform(df[NUM_COLS])
 
-    df = df[feature_names]
-    df_scaled = scaler.transform(df)
+    # 모델 피처 순서에 맞게 정렬
+    df = df[FEATURE_ORDER]
 
-    return pd.DataFrame(df_scaled, columns=feature_names)
+    return df
 
 
 def predict_single(data_dict):
-    df = pd.DataFrame([data_dict])
-    x = make_features(df)
+    x = make_features(data_dict)
 
     pred = model.predict(x)[0]
     proba = model.predict_proba(x)[0][1] if hasattr(model, "predict_proba") else None
 
+    # 개별 SHAP 분석
+    shap_values = explainer(x)
+    feature_impacts = []
+    for i, fname in enumerate(FEATURE_ORDER):
+        val = shap_values.values[0][i]
+        feature_impacts.append({"feature": fname, "impact": float(val)})
+
+    # 영향력 절대값 기준 정렬
+    feature_impacts.sort(key=lambda d: abs(d["impact"]), reverse=True)
+
     return {
         "prediction": int(pred),
-        "churn_probability": float(proba) if proba is not None else None
+        "churn_probability": float(proba) if proba is not None else None,
+        "feature_impacts": feature_impacts,
     }
 
 
 if __name__ == "__main__":
     sample = {
-        "age": 29,
-        "gender": "Female",
-        "subscription_type": "Basic",
-        "watch_hours": 50,
-        "last_login_days": 42,
-        "region": "Asia",
-        "device": "Mobile",
-        "monthly_fee": 9.99,
-        "payment_method": "Credit Card",
-        "number_of_profiles": 2,
-        "avg_watch_time_per_day": 1.6,
-        "favorite_genre": "Drama"
+        "age": 55, "gender": "Male", "subscription_type": "Basic",
+        "watch_hours": 3, "last_login_days": 55, "region": "Africa",
+        "device": "TV", "payment_method": "Gift Card",
+        "number_of_profiles": 1, "avg_watch_time_per_day": 0.1,
+        "favorite_genre": "Action"
     }
 
-    print(predict_single(sample))
+    result = predict_single(sample)
+    print(f"예측: {result['prediction']}, 확률: {result['churn_probability']:.4f}")
+    print("\n주요 이탈 요인:")
+    for f in result["feature_impacts"][:5]:
+        direction = "이탈↑" if f["impact"] > 0 else "유지↑"
+        print(f"  {f['feature']:30s} {f['impact']:+.3f} ({direction})")
