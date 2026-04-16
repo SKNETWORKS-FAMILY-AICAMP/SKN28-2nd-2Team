@@ -12,7 +12,7 @@ scaler = joblib.load(MODEL_DIR / "scaler.pkl")
 label_encoders = joblib.load(MODEL_DIR / "label_encoders.pkl")
 
 # 모델이 학습할 때 사용한 피처 순서
-FEATURE_ORDER = model.feature_names_
+FEATURE_ORDER = joblib.load(MODEL_DIR / "feature_names.pkl")
 CAT_COLS = ["gender", "subscription_type", "region", "device", "payment_method", "favorite_genre"]
 NUM_COLS = [c for c in FEATURE_ORDER if c not in CAT_COLS]
 
