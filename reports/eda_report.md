@@ -28,9 +28,9 @@
 
 # 2. Core Behavioral Features
 
+<img src="./graphs/core_behavior_distributions.png" width="900"/>
 ## 2.1 Reengagement Need Score
 
-<img src="./graphs/reengagement_score_distribution.png" width="600"/>
 
 ### Observation
 
@@ -50,7 +50,6 @@
 
 ## 2.2 Inactivity Ratio
 
-<img src="./graphs/inactivity_ratio_distribution.png" width="600"/>
 
 ### Observation
 
@@ -69,7 +68,7 @@
 
 ## 2.3 Watch Hours
 
-<img src="./graphs/watch_hours_distribution.png" width="600"/>
+
 
 ### Observation
 
@@ -88,7 +87,6 @@
 
 ## 2.4 Last Login Days
 
-<img src="./graphs/last_login_days_distribution.png" width="600"/>
 
 ### Observation
 
