@@ -182,7 +182,7 @@
 <img src="./eda_graphs/device_churn_rate.png" width="600"/>
 
 * 특정 디바이스에서 churn 증가
-  → UX 영향 가능
+
 
 ---
 
