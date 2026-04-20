@@ -29,44 +29,8 @@
 # 2. Core Behavioral Features
 
 <img src="./graphs/core_behavior_distributions.png" width="900"/>
-## 2.1 Reengagement Need Score
 
-
-### Observation
-
-- Stayed: 0~100 구간 집중
-- Churned: 100~300 이상 구간 분포
-
-### Interpretation
-
-두 그룹 간 분포가 명확히 분리되며, 값이 증가할수록 churn 비율이 증가한다.
-
-### Insight
-
-- churn risk를 직접적으로 반영하는 핵심 feature
-- threshold 기반 segmentation 가능
-
----
-
-## 2.2 Inactivity Ratio
-
-
-### Observation
-
-- Stayed: 0~3 구간
-- Churned: 5 이상 구간 증가
-
-### Interpretation
-
-비활동 시간이 증가할수록 churn 확률이 급격히 증가하는 구조이다.
-
-### Insight
-
-- engagement보다 inactivity가 더 강력한 signal
-
----
-
-## 2.3 Watch Hours
+## 2.1 Watch Hours
 
 
 
@@ -85,7 +49,7 @@
 
 ---
 
-## 2.4 Last Login Days
+## 2.2 Last Login Days
 
 
 ### Observation
@@ -103,20 +67,9 @@
 
 ---
 
-# 3. Derived Features
+# 3. Additional Feature Distribution
 
-## 3.1 Watch Hours per Profile
-
-<img src="./graphs/derived_feature_distributions.png" width="900"/>
-
-### Insight
-
-- 파생 변수 분포 그래프에서 계정 활용도 관련 변수는 전반적으로 낮은 값에 집중되어 있다.
-- 특히 profile당 시청시간이 낮은 구간에서 churn 가능성이 높아지는 패턴을 확인할 수 있다.
-
----
-
-## 3.2 Avg Watch Time
+## 3.1 Avg Watch Time per Day
 
 <img src="./graphs/derived_feature_distributions.png" width="900"/>
 
@@ -124,10 +77,11 @@
 
 - 대부분 사용자는 낮은 평균 시청시간 구간에 몰려 있으며, 일부 heavy user가 long-tail 형태로 존재한다.
 - 이는 사용자 행동이 **light user vs heavy user** 구조로 양극화되어 있음을 의미한다.
+- 하루 24시간을 초과하는 비논리적 값 10건은 전처리 단계에서 제거하였다.
 
 ---
 
-## 3.3 Number of Profiles
+## 3.2 Number of Profiles
 
 <img src="./graphs/derived_feature_distributions.png" width="900"/>
 
@@ -146,11 +100,10 @@
 ### Observation
 
 - Churn 그룹:
-  - inactivity ↑
-  - watch_hours ↓
-  - reengagement_score ↑
-  - profile당 시청시간 ↓
-  - 평균 시청시간 ↓
+  - last_login_days ↑ (미접속 기간 증가)
+  - watch_hours ↓ (총 시청시간 감소)
+  - avg_watch_time_per_day ↓ (일 평균 시청시간 감소)
+  - number_of_profiles ↓ (계정 활용도 낮음)
 
 ### Interpretation
 
@@ -214,15 +167,15 @@
 ### Insight
 
 - last_login_days ↔ churn: positive correlation
-- inactivity_ratio ↔ churn: positive correlation
 - watch_hours ↔ churn: negative correlation
-- reengagement score 관련 변수들도 churn과 높은 연관성 존재
+- avg_watch_time_per_day ↔ churn: negative correlation
+- payment_method·subscription_type도 churn과 유의미한 연관성 존재
 
 ### Interpretation
 
 상관관계 히트맵 기준으로 churn은  
-**비활동성 증가**와 **사용량 감소**에 밀접하게 연결되어 있다.  
-특히 inactivity, recency, engagement 계열 feature들이 핵심 축을 형성한다.
+**미접속 기간 증가**와 **사용량 감소**에 밀접하게 연결되어 있다.  
+특히 recency(`last_login_days`)와 engagement(`watch_hours`, `avg_watch_time_per_day`) 계열 feature들이 핵심 축을 형성한다.
 
 ---
 
