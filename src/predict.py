@@ -1,6 +1,5 @@
 import joblib
 import pandas as pd
-import numpy as np
 import shap
 from pathlib import Path
 
@@ -27,20 +26,6 @@ def make_features(data_dict):
     for col in ["monthly_fee", "customer_id"]:
         if col in df.columns:
             df = df.drop(columns=[col])
-
-    # 파생변수
-    df["inactive_user_flag"] = (df["last_login_days"] >= 30).astype(int)
-    df["estimated_days"] = np.where(
-        df["avg_watch_time_per_day"] > 0,
-        df["watch_hours"] / df["avg_watch_time_per_day"],
-        0
-    )
-    df["login_inactivity_ratio"] = np.where(
-        df["estimated_days"] > 0,
-        df["last_login_days"] / df["estimated_days"],
-        0
-    )
-    # clip 제거: 1.0 이상도 의미 있는 정보
 
     # Label Encoding
     for col in CAT_COLS:

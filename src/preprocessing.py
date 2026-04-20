@@ -1,30 +1,18 @@
 import pandas as pd
-import numpy as np
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 
 
 def preprocess(df):
     df = df.copy()
 
+    # 이상치 제거: 하루 24시간 초과는 물리적으로 불가능
+    df = df[df["avg_watch_time_per_day"] <= 24].reset_index(drop=True)
+
     # 불필요 컬럼 제거
     if "customer_id" in df.columns:
         df = df.drop(columns=["customer_id"])
     if "monthly_fee" in df.columns:
         df = df.drop(columns=["monthly_fee"])
-
-    # 파생변수 생성
-    df["inactive_user_flag"] = (df["last_login_days"] >= 30).astype(int)
-    df["estimated_days"] = np.where(
-        df["avg_watch_time_per_day"] > 0,
-        df["watch_hours"] / df["avg_watch_time_per_day"],
-        0
-    )
-    df["login_inactivity_ratio"] = np.where(
-        df["estimated_days"] > 0,
-        df["last_login_days"] / df["estimated_days"],
-        0
-    )
-    # clip 제거: 1.0 이상도 의미 있는 정보 (가입 기간보다 오래 안 들어온 것)
 
     # 타겟 분리
     y = None
