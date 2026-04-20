@@ -86,18 +86,28 @@ with tab1:
 
     with col1:
         gender = st.selectbox("Gender (성별)", ["Male", "Female", "Other"])
-        watch_hours = st.number_input("Watch Hours (총 시청시간)", min_value=0.0, value=10.0, step=1.0)
+        watch_hours = st.number_input(
+            "Watch Hours (총 시청시간)",
+            min_value=0.0, max_value=120.0, value=10.0, step=1.0
+        )
         region = st.selectbox("Region (지역)", ["Asia", "Europe", "North America", "South America", "Africa", "Oceania"])
 
     with col2:
         subscription_type = st.selectbox("Subscription Type (구독유형)", ["Basic", "Standard", "Premium"])
-        avg_watch_time_per_day = st.number_input("Avg Watch Time Per Day (일 평균 시청시간)", min_value=0.0, value=1.0, step=0.1)
+        avg_watch_time_per_day = st.number_input(
+            "Avg Watch Time Per Day (일 평균 시청시간)",
+            min_value=0.0, max_value=24.0, value=1.0, step=0.1,
+            help="하루 24시간 초과 입력 불가"
+        )
         device = st.selectbox("Device (기기)", ["Mobile", "TV", "Tablet", "Laptop", "Desktop"])
 
     with col3:
         payment_method = st.selectbox("Payment Method (결제수단)", ["Credit Card", "Debit Card", "Crypto", "Gift Card", "PayPal"])
-        last_login_days = st.number_input("Last Login Days (마지막 로그인 경과일)", min_value=0, value=20, step=1)
-        favorite_genre = st.selectbox("Favorite Genre (선호 장르)", ["Drama", "Action", "Comedy", "Romance", "Sci-Fi", "Documentary", "Thriller"])
+        last_login_days = st.number_input(
+            "Last Login Days (마지막 로그인 경과일)",
+            min_value=0, max_value=365, value=20, step=1
+        )
+        favorite_genre = st.selectbox("Favorite Genre (선호 장르)", ["Action", "Comedy", "Documentary", "Drama", "Horror", "Romance", "Sci-Fi"])
 
     if st.button("Predict Churn (이탈 예측)"):
         data = {
